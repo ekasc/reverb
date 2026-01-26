@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+	<rect width="32" height="32" fill="#000000" rx="6" />
+
+	<!-- "re" text -->
+	<text
+		x="10"
+		y="21"
+		font-family="Arial, sans-serif"
+		font-size="16"
+		font-weight="700"
+		fill="#ffffff"
+		text-anchor="middle"
+	>
+		re
+	</text>
+
+	<!-- Colon as equalizer bars -->
+	<rect x="19" y="12" width="2.5" height="3" fill="#ffffff" rx="1.25" />
+	<rect x="19" y="17" width="2.5" height="5" fill="#ffffff" rx="1.25" />
+</svg>
