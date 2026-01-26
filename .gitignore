@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Env / local data
+.env
+.dev.vars
+.data/
+*.sqlite
+*.sqlite3
+
+# Cloudflare Wrangler
+.wrangler/
+
+# TypeScript build artifacts
+*.tsbuildinfo
+
+# Vite profiling
+vite-profile-*.cpuprofile.json

@@ -1,51 +1,63 @@
-# React + TypeScript + Vite
+# Re:Verb
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Two-person bracket tournaments built from Spotify top tracks.
 
-Currently, two official plugins are available:
+## What It Does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Host connects Spotify → a tournament is created.
+- Share the invite link → challenger connects Spotify.
+- Start the bracket → pick winners match-by-match (with preview clips when available).
+- View results → optionally generate a Spotify playlist from the final ranking.
 
-## Expanding the ESLint configuration
+Time ranges follow Spotify’s supported values: `short_term`, `medium_term`, `long_term`.
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Local Development
 
-- Configure the top-level `parserOptions` property like this:
+### 1) Create a Spotify App
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+In the Spotify Developer Dashboard:
+
+- Add Redirect URI (local): `http://localhost:8788/api/auth/callback`
+- Add Redirect URI (prod): `https://<your-domain>/api/auth/callback`
+
+### 2) Create a D1 database
+
+```bash
+bunx wrangler d1 create reverb
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+Then paste the returned `database_id` into `wrangler.toml`.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+### 3) Configure env
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+Copy `.dev.vars.example` → `.dev.vars` and fill:
+
+- `SPOTIFY_CLIENT_ID`
+- `SPOTIFY_CLIENT_SECRET`
+- `TOKEN_ENC_KEY`
+- `APP_ORIGIN` (should be `http://localhost:8788` locally)
+
+### 4) Run
+
+Install deps:
+
+```bash
+bun install
 ```
-# music-stats
+
+Start frontend + API:
+
+```bash
+bun run dev:all
+```
+
+Open:
+
+- `http://localhost:8788`
+
+## Scripts
+
+- `bun run dev` - Vite frontend
+- `bun run dev:cf` - Cloudflare Pages (Functions + D1) local dev
+- `bun run dev:all` - Vite + Pages dev proxy
+- `bun run dev:api` - legacy Fastify API (SQLite file)

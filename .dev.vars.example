@@ -1,0 +1,11 @@
+NODE_ENV="development"
+APP_ORIGIN="http://localhost:8788"
+
+# Spotify App
+SPOTIFY_CLIENT_ID=""
+SPOTIFY_CLIENT_SECRET=""
+SPOTIFY_REDIRECT_URI="http://localhost:8788/api/auth/callback"
+
+# 32-byte key (base64 recommended). Example command:
+# python -c "import os,base64; print(base64.b64encode(os.urandom(32)).decode())"
+TOKEN_ENC_KEY=""

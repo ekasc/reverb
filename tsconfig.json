@@ -6,6 +6,12 @@
 		},
 		{
 			"path": "./tsconfig.node.json"
+		},
+		{
+			"path": "./tsconfig.cf.json"
+		},
+		{
+			"path": "./tsconfig.server.json"
 		}
 	],
 	"compilerOptions": {
@@ -13,6 +19,9 @@
 		"paths": {
 			"@/*": [
 				"./src/*"
+			],
+			"@shared/*": [
+				"./shared/*"
 			]
 		}
 	}
