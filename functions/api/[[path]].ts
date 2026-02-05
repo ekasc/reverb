@@ -438,9 +438,29 @@ app.get("/auth/callback", async (c) => {
 
 		await db.delete(oauthStates).where(eq(oauthStates.state, q.state));
 		return c.redirect(`${data.appOrigin}${data.returnTo}`);
-	} catch {
+	} catch (err) {
+		try {
+			const reqId = c.req.header("cf-ray") ?? c.req.header("x-request-id") ?? "";
+			console.error("OAuth callback failed", {
+				reqId,
+				url: c.req.url,
+				state: q.state,
+				message: err instanceof Error ? err.message : String(err),
+				stack: err instanceof Error ? err.stack : undefined,
+			});
+		} catch {
+			// ignore
+		}
+
 		await db.delete(oauthStates).where(eq(oauthStates.state, q.state));
-		return c.redirect(`${data.appOrigin}/?error=oauth_failed`);
+		const isProd = env.NODE_ENV === "production";
+		const detail =
+			err instanceof Error ? err.message : typeof err === "string" ? err : "";
+		return c.redirect(
+			`${data.appOrigin}/?error=oauth_failed${
+				isProd || !detail ? "" : `&detail=${encodeURIComponent(detail)}`
+			}`,
+		);
 	}
 });
 
