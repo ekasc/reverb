@@ -482,8 +482,22 @@ app.get("/auth/callback", async (c) => {
 		const meMatch = /^Spotify \/me failed \((\d+)\):\s*([\s\S]+)$/.exec(detail);
 		if (meMatch) {
 			const status = meMatch[1] ?? "";
+			const raw = meMatch[2] ?? "";
+			let reason = "";
+			try {
+				const parsed = JSON.parse(raw) as {
+					error?: { message?: unknown };
+					message?: unknown;
+				};
+				const msg = parsed?.error?.message ?? parsed?.message;
+				reason = typeof msg === "string" ? msg : "";
+			} catch {
+				// ignore
+			}
 			return c.redirect(
-				`${data.appOrigin}/?error=spotify_me_failed&status=${encodeURIComponent(status)}`,
+				`${data.appOrigin}/?error=spotify_me_failed&status=${encodeURIComponent(
+					status,
+				)}${reason ? `&reason=${encodeURIComponent(reason)}` : ""}`,
 			);
 		}
 
