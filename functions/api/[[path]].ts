@@ -459,6 +459,34 @@ app.get("/auth/callback", async (c) => {
 		const detail =
 			err instanceof Error ? err.message : typeof err === "string" ? err : "";
 
+		const tokenExchangeMatch = /^Spotify token exchange failed \((\d+)\):\s*([\s\S]+)$/.exec(
+			detail,
+		);
+		if (tokenExchangeMatch) {
+			const status = tokenExchangeMatch[1] ?? "";
+			const raw = tokenExchangeMatch[2] ?? "";
+			let reason = "";
+			try {
+				const parsed = JSON.parse(raw) as { error?: unknown; error_description?: unknown };
+				reason = typeof parsed.error === "string" ? parsed.error : "";
+			} catch {
+				// ignore
+			}
+			return c.redirect(
+				`${data.appOrigin}/?error=spotify_token_exchange_failed&status=${encodeURIComponent(
+					status,
+				)}${reason ? `&reason=${encodeURIComponent(reason)}` : ""}`,
+			);
+		}
+
+		const meMatch = /^Spotify \/me failed \((\d+)\):\s*([\s\S]+)$/.exec(detail);
+		if (meMatch) {
+			const status = meMatch[1] ?? "";
+			return c.redirect(
+				`${data.appOrigin}/?error=spotify_me_failed&status=${encodeURIComponent(status)}`,
+			);
+		}
+
 		if (detail === "missing_refresh_token") {
 			return c.redirect(`${data.appOrigin}/?error=missing_refresh_token`);
 		}
