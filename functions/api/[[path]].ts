@@ -494,6 +494,11 @@ app.get("/auth/callback", async (c) => {
 			} catch {
 				// ignore
 			}
+			if (!reason && raw) {
+				// Fallback: include the first part of the raw body so we can debug
+				// cases where Spotify doesn't return JSON.
+				reason = raw.slice(0, 160);
+			}
 			return c.redirect(
 				`${data.appOrigin}/?error=spotify_me_failed&status=${encodeURIComponent(
 					status,
