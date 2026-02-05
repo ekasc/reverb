@@ -252,6 +252,10 @@ app.post("/login", async (c) => {
 		state,
 		scopes,
 		redirectUri,
+		// Spotify may not return a refresh_token if the user already authorized
+		// the app previously. Force the consent screen so we reliably get one
+		// for new / migrated databases.
+		showDialog: true,
 	});
 
 	return c.json({ message: authUrl, err: null });
@@ -360,9 +364,7 @@ app.get("/auth/callback", async (c) => {
 			? await encryptString({ plain: token.refresh_token, key: env.TOKEN_ENC_KEY })
 			: existingTokens?.refreshTokenEnc;
 		if (!refreshTokenEnc) {
-			throw new Error(
-				"Spotify did not return a refresh_token and none exists",
-			);
+			throw new Error("missing_refresh_token");
 		}
 
 		const accessTokenEnc = await encryptString({
@@ -456,6 +458,11 @@ app.get("/auth/callback", async (c) => {
 		const isProd = env.NODE_ENV === "production";
 		const detail =
 			err instanceof Error ? err.message : typeof err === "string" ? err : "";
+
+		if (detail === "missing_refresh_token") {
+			return c.redirect(`${data.appOrigin}/?error=missing_refresh_token`);
+		}
+
 		return c.redirect(
 			`${data.appOrigin}/?error=oauth_failed${
 				isProd || !detail ? "" : `&detail=${encodeURIComponent(detail)}`
