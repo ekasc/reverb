@@ -48,6 +48,22 @@ const app = new Hono<{
 let cachedEnv: AppEnv | null = null;
 
 app.onError((err, c) => {
+	// Always log the real error server-side. In production we intentionally
+	// return a generic message to the client.
+	try {
+		const reqId = c.req.header("cf-ray") ?? c.req.header("x-request-id") ?? "";
+		console.error("API error", {
+			reqId,
+			method: c.req.method,
+			url: c.req.url,
+			name: err instanceof Error ? err.name : typeof err,
+			message: err instanceof Error ? err.message : String(err),
+			stack: err instanceof Error ? err.stack : undefined,
+		});
+	} catch {
+		// ignore
+	}
+
 	// Normalize errors so the frontend can reliably detect missing scopes.
 	let isProd = true;
 	try {
