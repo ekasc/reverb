@@ -5,6 +5,23 @@ import * as schema from "../../db/schema";
 let bootstrapPromise: Promise<void> | null = null;
 let cachedDb: Db | null = null;
 
+function splitSqlStatements(sql: string) {
+	return sql
+		.split(";")
+		.map((s) => s.trim())
+		.filter(Boolean);
+}
+
+async function execStatements(db: D1Database, sql: string) {
+	// Avoid `db.exec()` here. We've seen production Pages deployments where
+	// Cloudflare's internal D1 metadata aggregation throws when `exec()` is
+	// used (TypeError reading `duration`). Running statements via
+	// `prepare().run()` is slower but stable.
+	for (const stmt of splitSqlStatements(sql)) {
+		await db.prepare(stmt).run();
+	}
+}
+
 async function tableColumns(db: D1Database, table: string) {
 	const info = await db
 		.prepare(`PRAGMA table_info(${table})`)
@@ -15,16 +32,17 @@ async function tableColumns(db: D1Database, table: string) {
 async function ensureColumn(db: D1Database, table: string, colName: string, ddl: string) {
 	const cols = await tableColumns(db, table);
 	if (cols.has(colName)) return;
-	await db.exec(ddl);
+	await db.prepare(ddl).run();
 }
 
 export async function ensureSchema(db: D1Database) {
 	if (bootstrapPromise) return bootstrapPromise;
 	bootstrapPromise = (async () => {
-
-	// Basic schema setup + non-destructive upgrades. This keeps D1 boot
-	// friction low while we iterate.
-		await db.exec(`
+		// Basic schema setup + non-destructive upgrades. This keeps D1 boot
+		// friction low while we iterate.
+		await execStatements(
+			db,
+			`
 		PRAGMA foreign_keys = ON;
 
 		CREATE TABLE IF NOT EXISTS users (
@@ -101,7 +119,8 @@ export async function ensureSchema(db: D1Database) {
 			completed_at INTEGER,
 			updated_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
 		);
-		`);
+		`,
+		);
 
 		await ensureColumn(
 			db,
